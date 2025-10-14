@@ -1,0 +1,16 @@
+{
+  "name": "fdc3-aws-kms-signer-demo",
+  "version": "1.0.0",
+  "description": "Demo application showing FDC3 AWS KMS signing in action",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "demo": "node index.js"
+  },
+  "dependencies": {
+    "fdc3-aws-kms-signer": "file:.."
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
