@@ -1,52 +1,166 @@
-![badge-labs](https://user-images.githubusercontent.com/327285/230928932-7c75f8ed-e57b-41db-9fb7-a292a13a1e58.svg)
+# FDC3 AWS KMS Signer
 
-<img align="right" width="40%" src="https://www.finos.org/hubfs/FINOS/finos-logo/FINOS_Icon_Wordmark_Name_RGB_horizontal.png">
+🔐 **Enterprise-grade cryptographic security for FDC3 contexts using AWS KMS**
 
-# FINOS Software Project Blueprint
+Add cryptographic signing and verification to your FDC3 applications with AWS Key Management Service (KMS). This standalone package enables secure inter-application communication in financial desktop environments.
 
-Project blueprint is a GitHub repository template for all [Fintech Open Source Foundation (FINOS)](https://www.finos.org/) hosted GitHub repositories, contributed and maintained by FINOS as part of the [Open Developer Platform (ODP)](https://odp.finos.org) initiative.
+## ✨ Features
 
+- 🔐 **Cryptographic Signing**: Sign FDC3 contexts with AWS KMS keys
+- ✅ **Signature Verification**: Verify context authenticity and integrity  
+- 🛡️ **Tamper Detection**: Detect modified or corrupted contexts
+- 🏢 **Enterprise Ready**: Production-grade security with AWS KMS
+- 📦 **Standalone Package**: Works with any FDC3 implementation
+- 🚀 **Easy Integration**: Drop-in solution for existing FDC3 apps
 
-## Using DCO to sign your commits
+## 🚀 Quick Start
 
-All commits must be signed with a DCO signature to avoid being flagged by the DCO Bot. This means that your commit log message must contain a line that looks like the following one, with your actual name and email address:
+### Installation
+
+```bash
+npm install fdc3-aws-kms-signer
+```
+
+### Basic Usage
+
+```typescript
+import { FDC3AWSKMSSigner } from 'fdc3-aws-kms-signer';
+import { getAgent } from '@finos/fdc3';
+
+// Initialize signer with your AWS KMS key
+const signer = new FDC3AWSKMSSigner({
+  keyId: 'arn-kms-region-account:key/your-key-id',
+  region: 'us-east-1'
+});
+
+// Get FDC3 agent
+const fdc3 = await getAgent();
+
+// Sign and broadcast a context
+const context = {
+  type: 'fdc3.instrument',
+  id: { ticker: 'AAPL' },
+  name: 'Apple Inc.'
+};
+
+const signedContext = await signer.sign(context);
+await fdc3.broadcast(signedContext.context);
+
+// Listen for and verify signed contexts
+fdc3.addContextListener(null, async (context, metadata) => {
+  if (isSignedContext(context)) {
+    const verification = await signer.verify(context);
+    if (verification.isValid) {
+      console.log('✅ Verified context from trusted source');
+      // Process with high trust
+    } else {
+      console.log('❌ Invalid signature - potential security issue');
+    }
+  }
+});
+
+function isSignedContext(context) {
+  return context.signature && context.keyId && context.timestamp;
+}
+```
+
+## 📚 Documentation
+
+- **[Complete Guide](docs/FDC3_AWS_KMS_SIGNING_GUIDE.md)** - Comprehensive documentation with examples
+- **[Quick Setup](docs/simple-setup-guide.md)** - Get started in 5 minutes
+- **[Security Guide](docs/security-guide.md)** - Security best practices
+
+## 🎯 Examples
+
+- **[Basic Example](examples/simple-kms-example.js)** - Simple signing and verification
+- **[FDC3 Integration](examples/fdc3-app-integration.js)** - Complete FDC3 app integration
+- **[Cross-App Verification](examples/cross-app-verification.js)** - App1 signs, App2 verifies
+- **[React Integration](examples/react-fdc3-integration.tsx)** - React component example
+
+## 🏃‍♂️ Demo
+
+Run the included demo to see it in action:
+
+```bash
+cd demo
+npm install
+npm start
+```
+
+## 🔧 Configuration
+
+### AWS Setup
+
+1. **Create KMS Key**: Create an AWS KMS key for signing
+2. **Set Permissions**: Grant your application access to the key
+3. **Configure Credentials**: Set up AWS credentials (IAM role, profile, or environment variables)
+
+### Environment Variables
+
+```bash
+AWS_KMS_KEY_ID=arn-kms-region-account:key/your-key-id
+AWS_REGION=us-east-1
+```
+
+## 🛡️ Security Benefits
+
+- **Cryptographic Integrity**: Detect any tampering with FDC3 contexts
+- **Authentication**: Verify the source of contexts using digital signatures
+- **Non-Repudiation**: Prove the origin of signed contexts
+- **Enterprise Key Management**: Leverage AWS KMS for secure key storage
+- **Compliance**: Meet regulatory requirements for data integrity
+
+## 🏗️ Architecture
 
 ```
-Signed-off-by: John Doe <john.doe@example.com>
+┌─────────────────┐    Sign     ┌─────────────────┐
+│   FDC3 App A    │ ──────────► │   AWS KMS Key   │
+│  (Trading App)  │             │                 │
+└─────────────────┘             └─────────────────┘
+         │                               │
+         │ Broadcast                     │
+         │ Signed Context               │ Verify
+         ▼                               ▼
+┌─────────────────┐             ┌─────────────────┐
+│   FDC3 Desktop  │             │   FDC3 App B    │
+│   Environment   │ ──────────► │  (Risk App)     │
+│                 │   Receive   │                 │
+└─────────────────┘             └─────────────────┘
 ```
 
-Adding the `-s` flag to your `git commit` will add that line automatically. You can also add it manually as part of your commit log message or add it afterwards with `git commit --amend -s`.
+## 🤝 Use Cases
 
-### Helpful DCO Resources
-- [Git Tools - Signing Your Work](https://git-scm.com/book/en/v2/Git-Tools-Signing-Your-Work)
-- [Signing commits
-](https://docs.github.com/en/github/authenticating-to-github/signing-commits)
+- **Trading Applications**: Secure order and trade context sharing
+- **Risk Management**: Verify authenticity of risk-related contexts
+- **Compliance**: Ensure data integrity for regulatory reporting
+- **Multi-Vendor Environments**: Trust contexts from different application vendors
+- **Audit Trails**: Maintain cryptographic proof of context origins
 
+## 📋 Requirements
 
-## How to use this blueprint
+- Node.js 16+
+- AWS KMS access
+- FDC3 implementation (optional - works standalone too)
 
-1. Clone this repository locally (`git clone https://github.com/finos-labs/project-blueprint.git`)
-2. Copy the `LICENSE`, `LICENSE.spdx`, and `NOTICE` files, as well as the entire `.github` directory, to your own repository (do _not_ copy this `README.md` file).
-3. Copy the `README.template.md` file to your repository, and rename it to `README.md`.
-4. Search and replace the following tokens in the newly copied files:
+## 🔗 Related Projects
 
-  | Token                        | Replace with                                                      |
-  | ---------------------------- | ----------------------------------------------------------------- |
-  | `{project name}`             | The name of the GitHub repository the project resides in.         |
-  | `{yyyy}`                     | The year you started working on the code.                         |
-  | `{current_year}`             | The current year.                                                 |
-  | `{name of copyright owner}`  | The copyright owner of the code (typically you or your employer). |
-  | `{email of copyright owner}` | The email address of the copyright owner of the code (if known).  |
+- [FDC3 Standard](https://fdc3.finos.org/) - Financial Desktop Connectivity and Collaboration Consortium
+- [AWS KMS](https://aws.amazon.com/kms/) - AWS Key Management Service
 
-5. Open the `NOTICE` file in a text editor and either remove the `{Other notices, as necessary}` token, or [add attributions if required by your code's dependencies](https://finosfoundation.atlassian.net/wiki/spaces/FINOS/pages/75530255/License+Categories).
-6. Open the `README.md` file in a text editor and complete the content as appropriate for your project.
-7. Add the [Apache license header to all of your source files](https://www.apache.org/licenses/LICENSE-2.0.html#apply).
-8. Commit all of your changes.
+## 📄 License
 
-## License
+ [LICENSE](LICENSE) file for details.
 
-Copyright 2020 Fintech Open Source Foundation
+## 🤝 Contributing
 
-Distributed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
+Contributions welcome! Please read our contributing guidelines and submit pull requests.
 
-SPDX-License-Identifier: [Apache-2.0](https://spdx.org/licenses/Apache-2.0)
+## 🆘 Support
+
+- 📖 Check the [documentation](docs/)
+- 🐛 Report issues on GitHub
+- 💬 Join the FDC3 community discussions
+
+---
+
+**Made with ❤️  by RRLL**
