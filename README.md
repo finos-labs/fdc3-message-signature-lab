@@ -155,12 +155,6 @@ AWS_REGION=us-east-1
 
 Contributions welcome! Please read our contributing guidelines and submit pull requests.
 
-## 🆘 Support
 
-- 📖 Check the [documentation](docs/)
-- 🐛 Report issues on GitHub
-- 💬 Join the FDC3 community discussions
 
----
 
-**Made with ❤️  by RRLL**
