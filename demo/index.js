@@ -23,10 +23,20 @@ class DemoFDC3App {
       await this.initializeFDC3();
 
       // Initialize AWS KMS signer
-      this.awsKmsSigner = new FDC3AWSKMSSigner({
+      const awsConfig = {
         keyId: process.env.AWS_KMS_KEY_ID || 'arn-kms-region-account:key025a714f-7218-4c6d-8699-11c45bd839da',
         region: process.env.AWS_REGION || 'us-east-1'
-      });
+      };
+
+      // Add credentials if provided
+      if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+        awsConfig.credentials = {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+        };
+      }
+
+      this.awsKmsSigner = new FDC3AWSKMSSigner(awsConfig);
 
       // Test the signer
       const testContext = {

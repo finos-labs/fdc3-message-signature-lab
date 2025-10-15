@@ -165,7 +165,9 @@ export function TradingDashboard() {
         console.log(`📨 Received context: ${context.type}`);
         
         let verificationStatus = 'unsigned';
-        let trustedContext = context;
+        // Always derive a display context: if it's a signed wrapper, use the inner payload
+        const displayContext = isSignedContext(context) ? context.context : context;
+        let trustedContext = displayContext;
 
         if (isSignedContext(context)) {
           console.log('🔐 Verifying signed context...');
@@ -178,11 +180,13 @@ export function TradingDashboard() {
           } else {
             verificationStatus = 'invalid';
             console.warn('❌ Invalid signature:', verification.error);
+            // Keep the inner payload for display so fields like name/id render
+            trustedContext = displayContext;
           }
         }
 
         // Add to received contexts list
-        setReceivedContexts(prev => [...prev, {
+        setReceivedContexts((prev: any[]) => [...prev, {
           id: Date.now(),
           context: trustedContext,
           source: metadata?.source || 'unknown',
@@ -318,7 +322,7 @@ export function TradingDashboard() {
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <strong>{item.context.type}</strong>
+                <strong>{item.context.type || item.context?.context?.type || 'unknown'}</strong>
                 <div>
                   {item.verificationStatus === 'verified' && <span style={{ color: 'green' }}>✅ Verified</span>}
                   {item.verificationStatus === 'invalid' && <span style={{ color: 'red' }}>❌ Invalid</span>}
@@ -330,7 +334,8 @@ export function TradingDashboard() {
                 {item.originalSigned && <span> | 🔐 Originally Signed</span>}
               </div>
               <div style={{ marginTop: '5px', fontSize: '14px' }}>
-                {item.context.name || JSON.stringify(item.context.id || {})}
+                {(item.context.name ?? item.context?.context?.name) ||
+                  JSON.stringify((item.context.id ?? item.context?.context?.id) || {})}
               </div>
             </div>
           ))}
