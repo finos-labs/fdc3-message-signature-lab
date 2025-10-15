@@ -1,4 +1,3 @@
-
 /**
  * FDC3 Demo Client Script
  * Uses real AWS KMS signing via API
@@ -15,13 +14,29 @@ class FDC3DemoApp {
 
   async initializeFDC3() {
     try {
-      // Try to use the standard @finos/fdc3 getAgent API
+      // Try to dynamically import and use the standard @finos/fdc3 getAgent API
+      console.log('📡 Attempting to load @finos/fdc3 module...');
+      
+      try {
+        const fdc3Module = await import('https://cdn.jsdelivr.net/npm/@finos/fdc3@latest/+esm');
+        
+        if (fdc3Module && fdc3Module.getAgent) {
+          console.log('📡 Using @finos/fdc3 getAgent API...');
+          this.fdc3Agent = await fdc3Module.getAgent();
+          console.log('✅ FDC3 Agent initialized via @finos/fdc3 getAgent()');
+          return;
+        }
+      } catch (importError) {
+        console.log('   @finos/fdc3 module not available via CDN, trying window fallback...');
+      }
+      
+      // Fallback to window-based detection for desktop agents
       if (window.fdc3) {
-        // Modern FDC3 2.0+ with getAgent
+        // Modern FDC3 2.0+ with getAgent on window
         if (typeof window.fdc3.getAgent === 'function') {
-          console.log('📡 Using FDC3 2.0+ getAgent API...');
+          console.log('📡 Using FDC3 2.0+ window.fdc3.getAgent API...');
           this.fdc3Agent = await window.fdc3.getAgent();
-          console.log('✅ FDC3 Agent initialized via getAgent()');
+          console.log('✅ FDC3 Agent initialized via window.fdc3.getAgent()');
           return;
         }
         
@@ -121,7 +136,7 @@ class FDC3DemoApp {
           body: JSON.stringify({ context })
         });
 
-  const signResult = await signResponse.json();
+        const signResult = await signResponse.json();
         console.log('Sign response:', signResult);
         
         if (signResult.success && signResult.signedContext) {
@@ -216,18 +231,18 @@ class FDC3DemoApp {
         }
       }
       const typeText = (item.context && (item.context.type || (item.context.context && item.context.context.type))) || 'unknown';
-            return `
-              <div class="${itemClass}">
-                <div class="context-header">
-                  <strong>${typeText}</strong>
-                  <span class="verification-badge ${badgeClass}">${badgeText}</span>
-                </div>
-                <div style="font-size: 12px; color: #666; margin-bottom: 8px;">
-                  From: ${item.source} • ${new Date(item.timestamp).toLocaleTimeString()}
-                </div>
-                <pre>${JSON.stringify(item.context, null, 2)}</pre>
-              </div>
-            `;
+      return `
+        <div class="${itemClass}">
+          <div class="context-header">
+            <strong>${typeText}</strong>
+            <span class="verification-badge ${badgeClass}">${badgeText}</span>
+          </div>
+          <div style="font-size: 12px; color: #666; margin-bottom: 8px;">
+            From: ${item.source} • ${new Date(item.timestamp).toLocaleTimeString()}
+          </div>
+          <pre>${JSON.stringify(item.context, null, 2)}</pre>
+        </div>
+      `;
     }).join('');
   }
 

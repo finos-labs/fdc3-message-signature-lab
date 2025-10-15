@@ -73,6 +73,18 @@ export function useFDC3WithKMS(appKeyId: string) {
 
   // Helper to get FDC3 agent
   async function getFDC3Agent(): Promise<FDC3Agent> {
+    try {
+      // Use the standard FDC3 getAgent API
+      const fdc3Module = await import('@finos/fdc3');
+      if (fdc3Module.getAgent) {
+        console.log('Using @finos/fdc3 module for FDC3 agent');
+        return await fdc3Module.getAgent();
+      }
+    } catch (error) {
+      console.warn('Failed to import @finos/fdc3, falling back to window.fdc3');
+    }
+    
+    // Fallback to legacy window-based detection
     if ((window as any).fdc3) {
       return (window as any).fdc3;
     }
